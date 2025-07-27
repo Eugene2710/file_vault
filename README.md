@@ -24,13 +24,13 @@ Django-based backend for the File Hub application, providing a robust API for fi
 
 1. **Create and activate virtual environment**
    ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   pip install poetry==1.8.3
+   poetry shell
    ```
 
 2. **Install Dependencies**
    ```bash
-   pip install -r requirements.txt
+   poetry install
    ```
 
 3. **Environment Setup**
@@ -45,23 +45,42 @@ Django-based backend for the File Hub application, providing a robust API for fi
    Set up a local S3-compatible object storage using Minio:
    ```bash
    # Create and run Minio container
-   docker run -d \
-     -p 9000:9000 \
-     -p 9001:9001 \
-     --name minio \
-     -e "MINIO_ROOT_USER=minioadmin" \
-     -e "MINIO_ROOT_PASSWORD=minioadmin" \
-     -v minio_data:/data \
-     quay.io/minio/minio server /data --console-address ":9001"
-   
+      docker run --rm -d \
+      --name minio \
+      -p 9000:9000 \
+      -p 9001:9001 \
+      -e MINIO_ROOT_USER=minioadmin \
+      -e MINIO_ROOT_PASSWORD=minioadmin \
+      -v ~/minio-data:/data \
+      minio/minio server /data --console-address ":9001"
+
    # Create bucket using mc (Minio Client)
    docker exec -it minio mc alias set myminio http://localhost:9000 minioadmin minioadmin
    docker exec -it minio mc mb myminio/file-hub-bucket
+   ```
+
+   Export AWS credentials
+   ```bash
+   export AWS_ACCESS_KEY_ID=minioadmin
+   export AWS_SECRET_ACCESS_KEY=minioadmin
+   export AWS_ENDPOINT_URL=http://localhost:9000
+   export AWS_DEFAULT_REGION=us-east-1
    ```
    
    Alternatively, you can access the Minio Console at http://localhost:9001 and create the bucket manually.
 
 5. **Database Setup**
+   SQLLite uses a file to persist data as a database. 
+   
+   Create a directory to store the database file.
+   
+   The Django app is configured in dettings.py to store the database file under ./data/db.sqlite3
+
+   Create the data folder
+   ```bash
+   mkdir -p data
+   ```
+
    ```bash
    python manage.py migrate
    python manage.py createsuperuser
