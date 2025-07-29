@@ -1,71 +1,71 @@
 from rest_framework import serializers
 from .models import File
 
+
 class FileSerializer(serializers.ModelSerializer):
+    file = serializers.SerializerMethodField()  # File URL
+    size = serializers.ReadOnlyField()  # Property from storage
+    file_hash = serializers.SerializerMethodField()  # Hash from storage
+    reference_count = (
+        serializers.SerializerMethodField()
+    )  # Reference count from storage
+    is_reference = serializers.SerializerMethodField()  # Maps to is_duplicate
+    original_file = (
+        serializers.SerializerMethodField()
+    )  # Always null for this implementation
+
     class Meta:
         model = File
         fields = [
-            'id',  # UUID primary key
-            'file',  # File upload field
-            'original_filename',  # User's original filename
-            'file_type',  # MIME type
-            'size',  # File size in bytes
-            'uploaded_at',  # Upload timestamp
-            'user_id',  # User identifier from header
-            'file_hash',  # SHA-256 hash for deduplication
-            'reference_count',  # Number of references to this file
-            'is_reference',  # Whether this is a duplicate reference
-            'original_file'  # Reference to original file if duplicate
+            "id",
+            "file",
+            "original_filename",
+            "file_type",
+            "size",
+            "uploaded_at",
+            "user_id",
+            "file_hash",
+            "reference_count",
+            "is_reference",
+            "original_file",
         ]
         read_only_fields = [
-            'id',  # Generated UUID
-            'uploaded_at',  # Auto-generated timestamp
-            'file_hash',  # Calculated during upload
-            'reference_count',  # Managed internally
-            'is_reference',  # Determined by deduplication logic
-            'original_file'  # Set by deduplication logic
+            "id",
+            "uploaded_at",
+            "size",
+            "file_hash",
+            "reference_count",
+            "is_reference",
+            "original_file",
         ]
 
-    def validate_file_type(self, value: str) -> str:
+    def get_file(self, obj: File) -> str:
+        """Return file access URL"""
+        return obj.file_url
+
+    def get_file_hash(self, obj: File) -> str:
+        """Return SHA-256 hash from storage"""
+        return obj.storage.file_hash
+
+    def get_reference_count(self, obj: File) -> int:
+        """Return reference count from storage"""
+        return obj.storage.reference_count
+
+    def get_is_reference(self, obj: File) -> bool:
+        """Return whether this upload was a duplicate (maps to is_duplicate)"""
+        return obj.is_duplicate
+
+    def get_original_file(self, obj: File) -> str | None:
         """
-        Validate file_type is a valid MIME type format.
-
-        Args:
-            value: MIME type string (e.g., "text/plain", "image/jpeg")
-
-        Returns:
-            str: Validated MIME type
-
-        Raises:
-            ValidationError: If MIME type format is invalid
+        Return the ID of the original file if this is a reference (duplicate).
+        The original file is the first file uploaded with this content (is_duplicate=False)
         """
-        if not value or '/' not in value:
-            raise serializers.ValidationError(
-                "file_type must be a valid MIME type (e.g., 'text/plain')"
-            )
-        return value
+        if not obj.is_duplicate:
+            return None
 
-    def validate_size(self, value: int) -> int:
-        """
-        Validate file size is within acceptable limits.
+        # Find the original (first) file with the same storage
+        original_file = File.objects.filter(
+            storage=obj.storage, is_duplicate=False
+        ).first()
 
-        Args:
-            value: File size in bytes
-
-        Returns:
-            int: Validated file size
-
-        Raises:
-            ValidationError: If file size exceeds limit
-        """
-        MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB as per requirements
-
-        if value < 0:
-            raise serializers.ValidationError("File size cannot be negative")
-
-        if value > MAX_FILE_SIZE:
-            raise serializers.ValidationError(
-                f"File size ({value} bytes) exceeds maximum allowed ({MAX_FILE_SIZE} bytes)"
-            )
-
-        return value
+        return str(original_file.id) if original_file else None
