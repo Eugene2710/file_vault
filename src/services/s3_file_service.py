@@ -57,7 +57,18 @@ class S3FileService:
         Create the bucket if it doesn't exist
         """
         try:
-            self.s3_client.create_bucket(Bucket=self.bucket_name)
+            # Get the region from the client configuration
+            client_region = self.s3_client.meta.region_name or "us-east-1"
+            
+            # For us-east-1, don't specify CreateBucketConfiguration
+            if client_region == "us-east-1":
+                self.s3_client.create_bucket(Bucket=self.bucket_name)
+            else:
+                # For all other regions, specify the LocationConstraint
+                self.s3_client.create_bucket(
+                    Bucket=self.bucket_name,
+                    CreateBucketConfiguration={'LocationConstraint': client_region}
+                )
         except ClientError as e:
             error_code = e.response["Error"]["Code"]
             if (
