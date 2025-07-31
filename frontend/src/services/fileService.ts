@@ -1,6 +1,10 @@
 import axios from 'axios';
 
-import { File as FileType, StorageStats, PaginatedResponse } from '../types/file';
+import {
+  File as FileType,
+  StorageStats,
+  PaginatedResponse,
+} from '../types/file';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
@@ -39,40 +43,45 @@ export const fileService = {
     }
   },
 
-  async getFiles(userId: string, filters?: {
-    search?: string;
-    file_type?: string;
-    min_size?: number;
-    max_size?: number;
-    start_date?: string;
-    end_date?: string;
-    page?: number;
-  }): Promise<PaginatedResponse<FileType>> {
+  async getFiles(
+    userId: string,
+    filters?: {
+      search?: string;
+      file_type?: string;
+      min_size?: number;
+      max_size?: number;
+      start_date?: string;
+      end_date?: string;
+      page?: number;
+    }
+  ): Promise<PaginatedResponse<FileType>> {
     if (!userId || userId.trim() === '') {
       return { count: 0, next: null, previous: null, results: [] };
     }
 
     try {
       const params = new URLSearchParams();
-      
+
       if (filters) {
         if (filters.search) params.append('search', filters.search);
         if (filters.file_type) params.append('file_type', filters.file_type);
-        if (filters.min_size !== undefined) params.append('min_size', filters.min_size.toString());
-        if (filters.max_size !== undefined) params.append('max_size', filters.max_size.toString());
+        if (filters.min_size !== undefined)
+          params.append('min_size', filters.min_size.toString());
+        if (filters.max_size !== undefined)
+          params.append('max_size', filters.max_size.toString());
         if (filters.start_date) params.append('start_date', filters.start_date);
         if (filters.end_date) params.append('end_date', filters.end_date);
         if (filters.page) params.append('page', filters.page.toString());
       }
 
       const url = `${API_URL}/files/${params.toString() ? '?' + params.toString() : ''}`;
-      
+
       const response = await axios.get(url, {
         headers: {
           UserId: userId.trim(),
         },
       });
-      
+
       // Handle both paginated and non-paginated responses
       if (response.data.results) {
         return response.data;
@@ -82,7 +91,7 @@ export const fileService = {
           count: response.data.length,
           next: null,
           previous: null,
-          results: response.data
+          results: response.data,
         };
       }
     } catch (error: any) {
@@ -126,7 +135,11 @@ export const fileService = {
     }
   },
 
-  async downloadFile(fileId: string, userId: string, filename: string): Promise<void> {
+  async downloadFile(
+    fileId: string,
+    userId: string,
+    filename: string
+  ): Promise<void> {
     if (!userId || userId.trim() === '') {
       throw new Error('User ID is required');
     }

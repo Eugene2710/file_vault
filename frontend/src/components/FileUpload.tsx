@@ -1,4 +1,8 @@
-import { CloudArrowUpIcon, CheckCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import {
+  CloudArrowUpIcon,
+  CheckCircleIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import React, { useState } from 'react';
 
@@ -34,10 +38,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     },
     onError: (error: any) => {
       console.error('Upload error:', error);
-      
+
       // Build detailed error message for UI
       let errorMessage = 'Upload failed:\n\n';
-      
+
       if (error.response) {
         // Server responded with error status
         errorMessage += `Status: ${error.response.status}\n`;
@@ -64,11 +68,11 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         // Something else happened
         errorMessage += `Error: ${error.message}\n`;
       }
-      
+
       if (error.message) {
         errorMessage += `\nOriginal Error: ${error.message}`;
       }
-      
+
       setError(errorMessage);
     },
   });
@@ -139,12 +143,14 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             <pre className="whitespace-pre-wrap font-mono text-xs">{error}</pre>
           </div>
         )}
-        
+
         {uploadedFile && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <div className="flex items-center mb-3">
               <CheckCircleIcon className="h-5 w-5 text-green-500 mr-2" />
-              <h3 className="text-sm font-semibold text-green-800">Upload Successful!</h3>
+              <h3 className="text-sm font-semibold text-green-800">
+                Upload Successful!
+              </h3>
               <button
                 onClick={() => setUploadedFile(null)}
                 className="ml-auto text-green-500 hover:text-green-700"
@@ -156,49 +162,78 @@ export const FileUpload: React.FC<FileUploadProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <div>
                   <span className="font-medium text-gray-700">ID:</span>
-                  <span className="ml-2 font-mono text-gray-600">{uploadedFile.id}</span>
+                  <span className="ml-2 font-mono text-gray-600">
+                    {uploadedFile.id}
+                  </span>
                 </div>
                 <div>
                   <span className="font-medium text-gray-700">User ID:</span>
-                  <span className="ml-2 font-mono text-gray-600">{uploadedFile.user_id}</span>
+                  <span className="ml-2 font-mono text-gray-600">
+                    {uploadedFile.user_id}
+                  </span>
                 </div>
                 <div>
                   <span className="font-medium text-gray-700">Filename:</span>
-                  <span className="ml-2 text-gray-600">{uploadedFile.original_filename}</span>
+                  <span className="ml-2 text-gray-600">
+                    {uploadedFile.original_filename}
+                  </span>
                 </div>
                 <div>
                   <span className="font-medium text-gray-700">File Type:</span>
-                  <span className="ml-2 text-gray-600">{uploadedFile.file_type}</span>
+                  <span className="ml-2 text-gray-600">
+                    {uploadedFile.file_type}
+                  </span>
                 </div>
                 <div>
                   <span className="font-medium text-gray-700">Size:</span>
-                  <span className="ml-2 text-gray-600">{uploadedFile.size} bytes ({(uploadedFile.size / 1024).toFixed(2)} KB)</span>
+                  <span className="ml-2 text-gray-600">
+                    {uploadedFile.size} bytes (
+                    {(uploadedFile.size / 1024).toFixed(2)} KB)
+                  </span>
                 </div>
                 <div>
                   <span className="font-medium text-gray-700">Uploaded:</span>
-                  <span className="ml-2 text-gray-600">{new Date(uploadedFile.uploaded_at).toLocaleString()}</span>
+                  <span className="ml-2 text-gray-600">
+                    {new Date(uploadedFile.uploaded_at).toLocaleString()}
+                  </span>
                 </div>
                 <div>
                   <span className="font-medium text-gray-700">File Path:</span>
-                  <span className="ml-2 font-mono text-gray-600 break-all">{uploadedFile.file}</span>
+                  <span className="ml-2 font-mono text-gray-600 break-all">
+                    {uploadedFile.file}
+                  </span>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700">Reference Count:</span>
-                  <span className="ml-2 text-gray-600">{uploadedFile.reference_count}</span>
+                  <span className="font-medium text-gray-700">
+                    Reference Count:
+                  </span>
+                  <span className="ml-2 text-gray-600">
+                    {uploadedFile.reference_count}
+                  </span>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700">Is Reference:</span>
-                  <span className="ml-2 text-gray-600">{uploadedFile.is_reference ? 'Yes' : 'No'}</span>
+                  <span className="font-medium text-gray-700">
+                    Is Reference:
+                  </span>
+                  <span className="ml-2 text-gray-600">
+                    {uploadedFile.is_reference ? 'Yes' : 'No'}
+                  </span>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700">Original File:</span>
-                  <span className="ml-2 font-mono text-gray-600">{uploadedFile.original_file || 'None'}</span>
+                  <span className="font-medium text-gray-700">
+                    Original File:
+                  </span>
+                  <span className="ml-2 font-mono text-gray-600">
+                    {uploadedFile.original_file || 'None'}
+                  </span>
                 </div>
               </div>
               <div className="mt-3 pt-2 border-t border-green-200">
                 <div>
                   <span className="font-medium text-gray-700">File Hash:</span>
-                  <span className="ml-2 font-mono text-xs text-gray-600 break-all">{uploadedFile.file_hash}</span>
+                  <span className="ml-2 font-mono text-xs text-gray-600 break-all">
+                    {uploadedFile.file_hash}
+                  </span>
                 </div>
               </div>
             </div>
