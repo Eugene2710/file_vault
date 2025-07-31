@@ -11,4 +11,4 @@ python manage.py migrate
 
 # Start server
 echo "Starting server..."
-gunicorn --bind 0.0.0.0:8000 core.wsgi:application 
+gunicorn --bind 0.0.0.0:8000 src.core.wsgi:application 
