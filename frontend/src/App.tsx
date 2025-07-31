@@ -5,6 +5,7 @@ import { FileUpload } from './components/FileUpload';
 
 function App() {
   const [refreshKey, setRefreshKey] = useState(0);
+  const [userId, setUserId] = useState('Eugene');
 
   const handleUploadSuccess = () => {
     setRefreshKey((prev) => prev + 1);
@@ -24,10 +25,31 @@ function App() {
         <div className="px-4 py-6 sm:px-0">
           <div className="space-y-6">
             <div className="bg-white shadow sm:rounded-lg">
-              <FileUpload onUploadSuccess={handleUploadSuccess} />
+              <div className="p-6">
+                <label
+                  htmlFor="userId"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  User ID
+                </label>
+                <input
+                  type="text"
+                  id="userId"
+                  value={userId}
+                  onChange={(e) => setUserId(e.target.value)}
+                  placeholder="Enter your User ID"
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                />
+              </div>
             </div>
             <div className="bg-white shadow sm:rounded-lg">
-              <FileList key={refreshKey} />
+              <FileUpload
+                onUploadSuccess={handleUploadSuccess}
+                userId={userId}
+              />
+            </div>
+            <div className="bg-white shadow sm:rounded-lg">
+              <FileList key={refreshKey} userId={userId} />
             </div>
           </div>
         </div>
