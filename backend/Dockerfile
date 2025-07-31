@@ -8,8 +8,14 @@ RUN apt-get update && \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-COPY requirements.txt .
+# Install Poetry with export plugin
+RUN pip install poetry==1.8.5
+
+# Copy Poetry files
+COPY pyproject.toml poetry.lock ./
+
+# Export dependencies to requirements.txt and install with pip
+RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy project files
