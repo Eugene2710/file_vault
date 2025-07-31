@@ -1,4 +1,43 @@
 services:
+  # MinIO S3-compatible storage
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    ports:
+      - "9000:9000"  # MinIO API
+      - "9001:9001"  # MinIO Console
+    volumes:
+      - minio_data:/data  # Persistent volume for MinIO data
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    restart: always
+
+  # Create MinIO bucket on startup
+  minio-create-bucket:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - AWS_BUCKET_NAME=${AWS_BUCKET_NAME}
+    entrypoint: >
+      /bin/sh -c "
+      sleep 10;
+      /usr/bin/mc alias set minio http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+      /usr/bin/mc mb minio/$$AWS_BUCKET_NAME --ignore-existing;
+      /usr/bin/mc policy set public minio/$$AWS_BUCKET_NAME;
+      exit 0;
+      "
+    restart: "no"
+
   backend:
     build: 
       context: ./backend
@@ -6,12 +45,22 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - backend_storage:/app/media
-      - backend_static:/app/staticfiles
-      - backend_data:/app/data
+      - backend_media:/app/media          # Persistent volume for media files
+      - backend_static:/app/staticfiles   # Persistent volume for static files
+      - backend_data:/app/data            # Persistent volume for SQLite database
     environment:
-      - DJANGO_DEBUG=True
-      - DJANGO_SECRET_KEY=insecure-dev-only-key
+      - DJANGO_DEBUG=${DJANGO_DEBUG}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DJANGO_SETTINGS_MODULE=src.core.settings
+      # S3/MinIO configuration (using actual env var names from views.py)
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_ENDPOINT_URL=${AWS_ENDPOINT_URL}
+      - AWS_REGION=${AWS_REGION}
+      - AWS_BUCKET_NAME=${AWS_BUCKET_NAME}
+    depends_on:
+      minio:
+        condition: service_healthy
     restart: always
 
   frontend:
@@ -21,12 +70,13 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - REACT_APP_API_URL=http://localhost:8000/api
+      - REACT_APP_API_URL=${REACT_APP_API_URL}
     depends_on:
       - backend
     restart: always
 
 volumes:
-  backend_storage:
-  backend_static:
-  backend_data: 
+  backend_media:      # Persistent storage for Django media files
+  backend_static:     # Persistent storage for Django static files  
+  backend_data:       # Persistent storage for SQLite database
+  minio_data:         # Persistent storage for MinIO S3 data 
