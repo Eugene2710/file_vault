@@ -1,189 +1,323 @@
-# File Hub Backend
+# Abnormal File Vault
 
-Django-based backend for the File Hub application, providing a robust API for file management.
+A full-stack file management application built with React and Django, designed for efficient file handling and storage.
 
 ## 🚀 Technology Stack
 
-- Python 3.9+
-- Django 4.x
-- Django REST Framework
+### Backend
+- Django 4.x (Python web framework)
+- Django REST Framework (API development)
 - SQLite (Development database)
-- Docker
-- WhiteNoise for static file serving
+- Gunicorn (WSGI HTTP Server)
+- WhiteNoise (Static file serving)
+
+### Frontend
+- React 18 with TypeScript
+- TanStack Query (React Query) for data fetching
+- Axios for API communication
+- Tailwind CSS for styling
+- Heroicons for UI elements
+
+### Infrastructure
+- Docker and Docker Compose
+- MinIO (S3-compatible object storage)
+- SQLite database with persistent volumes
+- Local file storage with volume mounting
 
 ## 📋 Prerequisites
 
-- Python 3.9 or higher
-- pip
-- Docker (if using containerized setup)
-- virtualenv or venv (recommended)
+Before you begin, ensure you have installed:
+- Docker (20.10.x or higher) and Docker Compose (2.x or higher)
+- Node.js (18.x or higher) - for local development
+- Python (3.9 or higher) - for local development
 
 ## 🛠️ Installation & Setup
 
-### Local Development
+### Using Docker (Recommended) - One Command Setup
 
+Start the entire application stack with a single command:
+
+```bash
+docker-compose up --build
+```
+
+This will spin up:
+- **Frontend** (React app) - http://localhost:3000
+- **Backend** (Django API) - http://localhost:8000  
+- **MinIO** (S3-compatible storage) - http://localhost:9000 (API) / http://localhost:9001 (Console)
+- **SQLite database** with persistent volumes
+
+#### What happens during startup:
+1. MinIO S3 storage service starts and creates the `file-hub` bucket
+2. Backend Django server runs migrations and starts the API server
+3. Frontend React app builds and serves the application
+4. All data persists in Docker volumes (database, uploaded files, static files)
+
+#### Accessing the services:
+- **Web Application**: http://localhost:3000
+- **Backend API**: http://localhost:8000/api
+- **MinIO Console**: http://localhost:9001 (Login: `minioadmin` / `minioadmin123`)
+
+#### Managing the application:
+```bash
+# Stop all services
+docker-compose down
+
+# Start with logs visible
+docker-compose up --build
+
+# Run in background
+docker-compose up -d --build
+
+# View logs
+docker-compose logs -f
+
+# Rebuild specific service
+docker-compose up --build backend
+```
+
+### Local Development Setup
+
+#### Backend Setup
 1. **Create and activate virtual environment**
    ```bash
-   pip install poetry==1.8.3
-   poetry shell
+   cd backend
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
-2. **Install Dependencies**
+2. **Install dependencies**
    ```bash
-   poetry install
+   pip install -r requirements.txt
    ```
 
-3. **Environment Setup**
-   Create a `.env` file in the backend directory:
-   ```env
-   DEBUG=True
-   SECRET_KEY=your-secret-key
-   ALLOWED_HOSTS=localhost,127.0.0.1
-   ```
-
-4. **S3 Minio Container Setup**
-   Set up a local S3-compatible object storage using Minio:
+3. **Create necessary directories**
    ```bash
-   # Create and run Minio container
-      docker run --rm -d \
-      --name minio \
-      -p 9000:9000 \
-      -p 9001:9001 \
-      -e MINIO_ROOT_USER=minioadmin \
-      -e MINIO_ROOT_PASSWORD=minioadmin \
-      -v ~/minio-data:/data \
-      minio/minio server /data --console-address ":9001"
-
-   # Create bucket using mc (Minio Client)
-   docker exec -it minio mc alias set myminio http://localhost:9000 minioadmin minioadmin
-   docker exec -it minio mc mb myminio/file-hub-bucket
+   mkdir -p media staticfiles data
    ```
 
-   Export AWS credentials
-   ```bash
-   export AWS_ACCESS_KEY_ID=minioadmin
-   export AWS_SECRET_ACCESS_KEY=minioadmin
-   export AWS_ENDPOINT_URL=http://localhost:9000
-   export AWS_DEFAULT_REGION=us-east-1
-   ```
-   
-   Alternatively, you can access the Minio Console at http://localhost:9001 and create the bucket manually.
-
-5. **Database Setup**
-   SQLLite uses a file to persist data as a database. 
-   
-   Create a directory to store the database file.
-   
-   The Django app is configured in dettings.py to store the database file under ./data/db.sqlite3
-
-   Create the data folder
-   ```bash
-   mkdir -p data
-   ```
-
+4. **Run migrations**
    ```bash
    python manage.py migrate
-   python manage.py createsuperuser
    ```
-   Note: SQLite database will be automatically created at `db.sqlite3`
 
-6. **Run Development Server**
+5. **Start the development server**
    ```bash
    python manage.py runserver
    ```
-   Access the API at http://localhost:8000/api
 
-### Docker Setup
+#### Frontend Setup
+1. **Install dependencies**
+   ```bash
+   cd frontend
+   npm install
+   ```
 
-```bash
-# Build the image
-docker build -t file-hub-backend .
+2. **Create environment file**
+   Create `.env.local`:
+   ```
+   REACT_APP_API_URL=http://localhost:8000/api
+   ```
 
-# Run the container
-docker run -p 8000:8000 file-hub-backend
+3. **Start development server**
+   ```bash
+   npm start
+   ```
+
+## 🌐 Accessing the Application
+
+When using Docker Compose:
+- **Frontend Application**: http://localhost:3000
+- **Backend API**: http://localhost:8000/api  
+- **MinIO S3 Console**: http://localhost:9001 (minioadmin/minioadmin123)
+
+When running locally:
+- **Frontend Application**: http://localhost:3000
+- **Backend API**: http://localhost:8000/api
+
+## 📝 API Documentation
+
+### File Management Endpoints
+
+#### List Files
+- **GET** `/api/files/`
+- Returns a list of all uploaded files
+- Response includes file metadata (name, size, type, upload date)
+
+#### Upload File
+- **POST** `/api/files/`
+- Upload a new file
+- Request: Multipart form data with 'file' field
+- Returns: File metadata including ID and upload status
+
+#### Get File Details
+- **GET** `/api/files/<file_id>/`
+- Retrieve details of a specific file
+- Returns: Complete file metadata
+
+#### Delete File
+- **DELETE** `/api/files/<file_id>/`
+- Remove a file from the system
+- Returns: 204 No Content on success
+
+#### Download File
+- Access file directly through the file URL provided in metadata
+
+## ⚡ Rate Limiting
+
+The application includes a built-in rate limiter to prevent abuse and ensure fair usage:
+
+### Configuration
+Rate limiting is configured via environment variables:
+- `RATE_LIMIT_N_CALLS`: Maximum number of API calls allowed (default: 2)
+- `RATE_LIMIT_X_SECONDS`: Time window in seconds (default: 1)
+
+### Behavior
+- Uses sliding window algorithm for accurate rate limiting
+- Returns HTTP 429 "Call Limit Reached" when limit exceeded
+- Applies per-user rate limiting based on client IP or user authentication
+
+### Example
+With default settings (2 calls per 1 second):
+- User can make 2 API calls within any 1-second window
+- 3rd call within the same window returns 429 error
+- Rate limit resets as the sliding window moves
+
+## 💾 Storage Limits
+
+The application enforces per-user storage quotas to manage resource usage:
+
+### Configuration
+Storage limits are configured via environment variables:
+- `TOTAL_STORAGE_LIMIT_Z_MB`: Maximum storage per user in MB (default: 10)
+
+### Behavior
+- Tracks total file size for each user across all uploaded files
+- Returns HTTP 429 "Storage Quota Exceeded" when limit would be exceeded
+- Applies to cumulative storage usage, not individual file sizes
+
+### Example
+With default settings (10MB per user):
+- User can upload files up to 10MB total storage
+- Subsequent uploads that would exceed 10MB return 429 error
+- Storage is reclaimed when files are deleted
+
+## 🗄️ Project Structure
+
+```
+file-hub/
+├── backend/                # Django backend
+│   ├── files/             # Main application
+│   │   ├── models.py      # Data models
+│   │   ├── views.py       # API views
+│   │   ├── urls.py        # URL routing
+│   │   └── serializers.py # Data serialization
+│   ├── core/              # Project settings
+│   └── requirements.txt   # Python dependencies
+├── frontend/              # React frontend
+│   ├── src/
+│   │   ├── components/    # React components
+│   │   ├── services/      # API services
+│   │   └── types/         # TypeScript types
+│   └── package.json      # Node.js dependencies
+└── docker-compose.yml    # Docker composition
 ```
 
-## 📁 Project Structure
+## 🔧 Development Features
 
-```
-backend/
-├── core/           # Project settings and main URLs
-├── files/          # File management app
-│   ├── models.py   # Data models
-│   ├── views.py    # API views
-│   ├── urls.py     # URL routing
-│   └── tests.py    # Unit tests
-├── db.sqlite3      # SQLite database
-└── manage.py       # Django management script
-```
-
-## 🔌 API Endpoints
-
-### Files API (`/api/files/`)
-
-- `GET /api/files/`: List all files
-  - Query Parameters:
-    - `search`: Search files by name
-    - `sort`: Sort by created_at, name, or size
-
-- `POST /api/files/`: Upload new file
-  - Request: Multipart form data
-  - Fields:
-    - `file`: File to upload
-    - `description`: Optional file description
-
-- `GET /api/files/<uuid>/`: Get file details
-- `DELETE /api/files/<uuid>/`: Delete file
-
-## 🔒 Security Features
-
-- UUID-based file identification
-- WhiteNoise for secure static file serving
-- CORS configuration for frontend integration
-- Django's built-in security features:
-  - CSRF protection
-  - XSS prevention
-  - SQL injection protection
-
-## 🧪 Testing
-
-```bash
-# Run all tests
-python manage.py test
-
-# Run specific test file
-python manage.py test files.tests
-```
+- Hot reloading for both frontend and backend
+- React Query DevTools for debugging data fetching
+- TypeScript for better development experience
+- Tailwind CSS for rapid UI development
 
 ## 🐛 Troubleshooting
 
-1. **Database Issues**
+### Docker Issues
+
+1. **Port Conflicts**
+   ```bash
+   # If ports are in use, modify docker-compose.yml ports section:
+   # 3000 (frontend), 8000 (backend), 9000/9001 (MinIO)
+   ```
+
+2. **MinIO Connection Issues**
+   ```bash
+   # Check MinIO health
+   docker-compose logs minio
+   
+   # Recreate MinIO bucket
+   docker-compose up minio-create-bucket
+   ```
+
+3. **Database Issues**
+   ```bash
+   # Reset database (removes all data)
+   docker-compose down
+   docker volume rm abnormal-file-hub-main_backend_data
+   docker-compose up --build
+   ```
+
+4. **Clean Start (removes all data)**
+   ```bash
+   # Stop and remove all containers and volumes
+   docker-compose down -v
+   docker-compose up --build
+   ```
+
+### Local Development Issues
+
+1. **Port Conflicts**
+   ```bash
+   # If ports 3000 or 8000 are in use:
+   # Frontend: npm start -- --port 3001
+   # Backend: python manage.py runserver 8001
+   ```
+
+2. **File Upload Issues**
+   - Maximum file size: 10MB
+   - Ensure proper permissions on media directory
+   - Check network tab for detailed error messages
+
+3. **Database Issues**
    ```bash
    # Reset database
-   rm db.sqlite3
+   rm backend/data/db.sqlite3
    python manage.py migrate
    ```
 
-2. **Static Files**
+# Project Submission Instructions
+
+## Preparing Your Submission
+
+1. Before creating your submission zip file, ensure:
+   - All features are implemented and working as expected
+   - All tests are passing
+   - The application runs successfully locally
+   - Remove any unnecessary files or dependencies
+   - Clean up any debug/console logs
+
+2. Create the submission zip file:
    ```bash
-   python manage.py collectstatic
+   # Activate your backend virtual environment first
+   cd backend
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   
+   # Run the submission script from the project root
+   cd ..
+   python create_submission_zip.py
    ```
 
-3. **Permission Issues**
-   - Check file permissions in media directory
-   - Ensure write permissions for SQLite database directory
+   The script will:
+   - Create a zip file named `username_YYYYMMDD.zip` (e.g., `johndoe_20240224.zip`)
+   - Respect .gitignore rules to exclude unnecessary files
+   - Preserve file timestamps
+   - Show you a list of included files and total size
+   - Warn you if the zip is unusually large
 
-## 📚 Contributing
+3. Verify your submission zip file:
+   - Extract the zip file to a new directory
+   - Ensure all necessary files are included
+   - Verify that no unnecessary files (like node_modules, __pycache__, etc.) are included
+   - Test the application from the extracted files to ensure everything works
 
-1. Fork the repository
-2. Create your feature branch
-3. Write and run tests
-4. Commit your changes
-5. Push to the branch
-6. Create a Pull Request
-
-## 📖 Documentation
-
-- API documentation available at `/api/docs/`
-- Admin interface at `/admin/`
-- Detailed API schema at `/api/schema/` 
+Once you have prepared the project for submission follow the instructions in the email to submit the project along with the video. 
