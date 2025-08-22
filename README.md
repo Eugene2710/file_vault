@@ -202,27 +202,6 @@ With default settings (10MB per user):
 - Subsequent uploads that would exceed 10MB return 429 error
 - Storage is reclaimed when files are deleted
 
-## 🗄️ Project Structure
-
-```
-file-hub/
-├── backend/                # Django backend
-│   ├── files/             # Main application
-│   │   ├── models.py      # Data models
-│   │   ├── views.py       # API views
-│   │   ├── urls.py        # URL routing
-│   │   └── serializers.py # Data serialization
-│   ├── core/              # Project settings
-│   └── requirements.txt   # Python dependencies
-├── frontend/              # React frontend
-│   ├── src/
-│   │   ├── components/    # React components
-│   │   ├── services/      # API services
-│   │   └── types/         # TypeScript types
-│   └── package.json      # Node.js dependencies
-└── docker-compose.yml    # Docker composition
-```
-
 ## 🔧 Development Features
 
 - Hot reloading for both frontend and backend
@@ -284,40 +263,3 @@ file-hub/
    rm backend/data/db.sqlite3
    python manage.py migrate
    ```
-
-# Project Submission Instructions
-
-## Preparing Your Submission
-
-1. Before creating your submission zip file, ensure:
-   - All features are implemented and working as expected
-   - All tests are passing
-   - The application runs successfully locally
-   - Remove any unnecessary files or dependencies
-   - Clean up any debug/console logs
-
-2. Create the submission zip file:
-   ```bash
-   # Activate your backend virtual environment first
-   cd backend
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   
-   # Run the submission script from the project root
-   cd ..
-   python create_submission_zip.py
-   ```
-
-   The script will:
-   - Create a zip file named `username_YYYYMMDD.zip` (e.g., `johndoe_20240224.zip`)
-   - Respect .gitignore rules to exclude unnecessary files
-   - Preserve file timestamps
-   - Show you a list of included files and total size
-   - Warn you if the zip is unusually large
-
-3. Verify your submission zip file:
-   - Extract the zip file to a new directory
-   - Ensure all necessary files are included
-   - Verify that no unnecessary files (like node_modules, __pycache__, etc.) are included
-   - Test the application from the extracted files to ensure everything works
-
-Once you have prepared the project for submission follow the instructions in the email to submit the project along with the video. 
