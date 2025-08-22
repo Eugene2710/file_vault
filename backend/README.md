@@ -173,14 +173,6 @@ python manage.py test files.tests
    - Check file permissions in media directory
    - Ensure write permissions for SQLite database directory
 
-## 📚 Contributing
-
-1. Fork the repository
-2. Create your feature branch
-3. Write and run tests
-4. Commit your changes
-5. Push to the branch
-6. Create a Pull Request
 
 ## 📖 Documentation
 
